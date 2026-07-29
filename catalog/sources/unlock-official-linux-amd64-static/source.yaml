@@ -1,0 +1,89 @@
+schemaVersion: 1
+sourceId: unlock-official-linux-amd64-static
+version: 1
+validForSeconds: 1209600
+minCoreProtocol: 1
+maxCoreProtocol: 2
+minCoreVersion: 1.0.0
+maxCoreVersion: 2.0.0
+compatibilityEpoch: 1
+permissions:
+  - metadata
+  - detection-data
+  - routing-data
+cohort:
+  os: linux
+  arch: amd64
+  abi: static
+entries:
+  - entryId: catalog-smoke
+    displayComponentId: catalog-smoke-display
+    displayName: Catalog Smoke Test
+    description: Synthetic data-only Catalog V1 conformance entry
+    tags:
+      - conformance
+      - synthetic
+    family:
+      name: catalog-smoke
+      displayName: Catalog Smoke Test
+      defaultEngine: mediaunlocktest
+      defaultVariant: global
+      routingEntry: catalog-smoke
+      variants:
+        global:
+          id: global
+          displayName: Global
+          requiredSlots:
+            - availability
+          bindings:
+            - id: catalog-smoke-check
+              provider: example
+              slots:
+                - availability
+      pinPolicy:
+        componentId: catalog-smoke-check
+        sourceSlot: availability
+        acceptedVerdicts:
+          - unlocked
+    metadata:
+      - componentId: catalog-smoke-metadata
+        artifactId: catalog-smoke-metadata-object
+    routing:
+      - componentId: catalog-smoke-route-inline
+        rule:
+          kind: domain
+          value: example.test
+      - componentId: catalog-smoke-route-data
+        rule:
+          kind: ruleset
+          format: yaml
+          behavior: domain
+          interval: 86400
+        artifactId: catalog-smoke-routing-object
+    detection:
+      - componentId: catalog-smoke-check
+        artifactIds:
+          - catalog-smoke-detection-object
+artifacts:
+  - artifactId: catalog-smoke-routing-object
+    entryId: catalog-smoke
+    permission: routing-data
+    mediaType: application/json
+    path: objects/sha256/9c/9ca556aef9a951d1b323640f2b8916e81765115169c5228a4b91fc74e16dd5de
+    sha256: 9ca556aef9a951d1b323640f2b8916e81765115169c5228a4b91fc74e16dd5de
+    length: 53
+  - artifactId: catalog-smoke-detection-object
+    entryId: catalog-smoke
+    permission: detection-data
+    mediaType: application/json
+    path: objects/sha256/b6/b644c2bba09c02862b8d687d5ffe51689e9e4fe162a160b49962b636444c7659
+    sha256: b644c2bba09c02862b8d687d5ffe51689e9e4fe162a160b49962b636444c7659
+    length: 46
+  - artifactId: catalog-smoke-metadata-object
+    entryId: catalog-smoke
+    permission: metadata
+    mediaType: application/json
+    path: objects/sha256/f7/f75f077ac6a24379b83ddd51a91d525305e20a291164d05e9d008e238b9524c7
+    sha256: f75f077ac6a24379b83ddd51a91d525305e20a291164d05e9d008e238b9524c7
+    length: 44
+revocations: []
