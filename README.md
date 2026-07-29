@@ -26,4 +26,25 @@ go vet ./...
 test -z "$(gofmt -l .)"
 ```
 
-The repository currently contains the initialization boundary only. Candidate construction, signing, assembly, and deployment arrive as separately reviewed tasks.
+## Build unsigned candidates
+
+Candidate builds require an explicit reproducible timestamp and a new output
+directory:
+
+```bash
+workdir="$(mktemp -d)"
+SOURCE_DATE_EPOCH=1785312000 \
+  go run ./cmd/catalog-publisher candidate --output "$workdir/candidate"
+```
+
+The command builds exactly two independent source roots:
+
+- `unlock-official-linux-amd64-static` grants data permissions only.
+- `unlock-official-linux-amd64-static-exec` grants executable permission
+  explicitly and pins executable descriptors to `linux/amd64/static`.
+
+Each output contains only `manifest.payload.json`, `signing-request.json`, and
+content-addressed `objects/`. It contains no signature, key, deploy credential,
+network operation, helper invocation, or artifact execution capability.
+
+Signing, assembly, and deployment remain separate later tasks.

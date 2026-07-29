@@ -14,11 +14,39 @@ Cross-repository compatibility is frozen by versioned candidate and negative fix
 4. The assembler combines fragments and publication metadata without gaining access to signing material.
 5. Deployment tooling may publish already assembled bytes; it never signs, executes Catalog artifacts, or stores signing material.
 
-Candidate building, signing, assembly, and deployment are separate commands and separate review surfaces. This initialization task defines those ownership boundaries without implementing later phases.
+Candidate building, signing, assembly, and deployment are separate commands and separate review surfaces. The candidate builder is implemented; signing, assembly, and deployment are not.
+
+## Candidate boundary
+
+Each declarative source has its own directory, source identity, permission set,
+object root, version, and watermark history. The default data source cannot
+declare executable permission or executable artifacts. The explicit executable
+source requires the complete permission set and exact `linux/amd64/static`
+platform metadata.
+
+The builder rejects unknown or duplicate YAML members, aliases, identity/root
+mismatches, duplicate stable IDs, permission bleed, non-canonical
+content-addressed paths, object digest or length drift, unsafe filesystem types,
+executable file modes, and unsupported cohorts. It reads object bytes but never
+executes them.
+
+`SOURCE_DATE_EPOCH` supplies the only build time. A candidate is an unsigned
+directory with this shape:
+
+```text
+<source-id>/
+  manifest.payload.json
+  signing-request.json
+  objects/sha256/<first-2>/<sha256>
+```
+
+The signing request binds the canonical payload digest, publisher policy,
+source identity, version, lifetime, permissions, cohort, and every object
+descriptor. Candidate files are mode `0644`; directories are mode `0755`.
 
 ## Key handling
 
-Real signing material never enters this repository, CI, logs, online services, deployment systems, or fixtures. Tests may eventually use conspicuously labeled deterministic test material, confined to fixture paths and unable to authorize a production trust root.
+Real signing material never enters this repository, CI, logs, online services, deployment systems, or fixtures. Candidate construction has no key provider and emits no signatures.
 
 ## Directory ownership
 
