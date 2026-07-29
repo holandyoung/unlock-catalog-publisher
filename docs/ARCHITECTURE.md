@@ -15,8 +15,8 @@ Cross-repository compatibility is frozen by versioned candidate and negative fix
 5. Deployment tooling may publish already assembled bytes; it never signs, executes Catalog artifacts, or stores signing material.
 
 Candidate building, signing, assembly, and deployment are separate commands and
-separate review surfaces. Candidate building and offline fragment signing are
-implemented; assembly and deployment are not.
+separate review surfaces. Candidate building, offline fragment signing, and
+threshold assembly are implemented; deployment is not.
 
 ## Candidate boundary
 
@@ -78,6 +78,26 @@ temporary owner-only passphrase file after use.
 PKCS#11 support is not implemented because compatible hardware-backed Ed25519
 behavior has not yet been verified. This does not weaken the later 2-of-3 or
 independent-custody requirements.
+
+## Assembly boundary
+
+The assembler revalidates every fragment against public Ed25519 roots and
+requires exact 2-of-3 roots with unique key IDs and unique key material. A root
+bridge must increase the version, remain valid for at least 90 days, retain a
+threshold-compatible shared key set, and carry signatures accepted by both the
+old and new roots. Replacing every key in one transition is rejected.
+
+The same canonical manifest payload must satisfy both roots during the bridge.
+Source identity and permissions are explicit operator inputs and are checked
+against the reviewed candidate. Data and executable releases have different
+identities, roots, and permission sets. Prior revocations are cumulative and
+cannot be removed, retargeted, weakened, or version-downgraded.
+
+Assembly writes a new directory atomically. It copies immutable object bytes,
+emits signed manifest and root envelopes, archives the versioned metadata, and
+builds a deterministic stored ZIP package with an exact allowlisted file tree.
+The package verifier rejects traversal, duplicate, missing, extra, executable,
+symlink, non-canonical metadata, length, and byte mismatches.
 
 ## Directory ownership
 
