@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/holandyoung/unlock-catalog-publisher/internal/catalogv1"
+	"github.com/holandyoung/unlock-catalog/internal/catalogv1"
 )
 
 func validDataSource() catalogv1.Source {

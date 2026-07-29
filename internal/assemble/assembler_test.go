@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/holandyoung/unlock-catalog-publisher/internal/catalogv1"
-	"github.com/holandyoung/unlock-catalog-publisher/internal/signing"
+	"github.com/holandyoung/unlock-catalog/internal/catalogv1"
+	"github.com/holandyoung/unlock-catalog/internal/signing"
 )
 
 func TestVerifyThresholdRejectsUnsafeFragmentSets(t *testing.T) {

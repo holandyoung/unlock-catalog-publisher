@@ -1,0 +1,6 @@
+schemaVersion: 1
+repository: holandyoung/unlock-catalog
+visibility: public
+defaultBranch: main
+releasePrefix: catalog/sources
+onlineOriginEnabled: false

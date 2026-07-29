@@ -1,0 +1,43 @@
+name: release-tree
+
+on:
+  pull_request:
+    paths:
+      - catalog/sources/**
+
+permissions:
+  contents: read
+
+jobs:
+  release-tree:
+    name: release-tree
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .release-base
+      - name: Verify protected release tree
+        shell: bash
+        env:
+          BASE_TREE: .release-base
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! -f .release-base/.github/workflows/release.yml ]]; then
+            echo "Bootstrap migration: release-tree policy is absent from the protected base."
+            exit 0
+          fi
+          args=(verify-release --base "$BASE_TREE" --repository .)
+          while IFS= read -r -d '' changed; do
+            args+=(--changed-file "$changed")
+          done < <(git diff --name-only -z "$BASE_SHA"...HEAD)
+          go run ./cmd/catalog-publisher "${args[@]}"

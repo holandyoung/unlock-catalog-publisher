@@ -1,4 +1,4 @@
-# Unlock Catalog Publisher
+# Unlock Catalog
 
 Standalone offline tooling for producing deterministic Unlock Catalog V1 publication artifacts.
 
@@ -8,13 +8,14 @@ This repository is intentionally independent from the Unlock Platform source tre
 
 | Area | Owner | Responsibility |
 | --- | --- | --- |
-| `cmd/catalog-publisher` | Publisher maintainers | Build deterministic unsigned candidates from declarative source content |
+| `cmd/catalog-publisher` | Publisher maintainers | Build unsigned candidates and materialize reviewed releases into a protected Git tree |
 | `cmd/catalog-signer` | Offline signing operators | Validate immutable candidate bytes and produce signature fragments |
 | `cmd/catalog-assembler` | Release operators | Assemble independently produced fragments without accessing signing material |
 | `internal/catalogv1` | Publisher maintainers | Canonical Catalog V1 encoding and validation |
-| `catalog/sources` | Catalog content owners | Declarative source content only |
+| `catalog/definitions` | Catalog content owners | Declarative unsigned source content only |
+| `catalog/sources` | Release operators | Threshold-signed public release bytes only |
 | `fixtures/v1` | Test maintainers | Synthetic conformance fixtures only |
-| `deploy` | Release operators | Publication documentation and deployment-side integration |
+| `deploy` | Release operators | Protected repository publication policy |
 
 CI runs only this repository's formatting, tests, vet, and secret-pattern scan. Signing material is never available to CI, online systems, or deployment automation.
 
@@ -107,4 +108,31 @@ The new output directory contains `manifest.json`, `root.json`, immutable
 objects, a versioned archive, and a deterministic `.ucp` package. Pass the prior
 signed manifest with `--prior-manifest` when one exists so cumulative
 revocations cannot be removed or downgraded. Deployment remains a separate
-later task.
+step.
+
+## Materialize a protected Git release
+
+The materializer copies the exact reviewed release into the repository's
+append-only release tree. It has no GitHub credential, signing key, network
+operation, or authority to alter signed bytes:
+
+```bash
+go run ./cmd/catalog-publisher materialize \
+  --release /release/source-id-v1 \
+  --repository /worktrees/unlock-catalog-release
+```
+
+Review the resulting `catalog/sources/<source-id>/` diff, then validate it
+against an exact base checkout:
+
+```bash
+go run ./cmd/catalog-publisher verify-release \
+  --base /worktrees/unlock-catalog-base \
+  --repository /worktrees/unlock-catalog-release
+```
+
+The protected `main` branch is the publication pointer. Existing objects,
+archives, roots, and packages cannot be removed or changed. The live manifest
+and root must resolve to exact immutable archives, every referenced object must
+match its digest and length, and the deterministic package must match the live
+release. GitHub raw is not yet enabled or promised as a subscription origin.

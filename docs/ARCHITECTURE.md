@@ -8,16 +8,16 @@ Cross-repository compatibility is frozen by versioned candidate and negative fix
 
 ## Trust boundaries
 
-1. Declarative content under `catalog/sources` is untrusted input to the candidate builder.
+1. Declarative content under `catalog/definitions` is untrusted input to the candidate builder.
 2. The publisher produces deterministic, canonical, unsigned candidate bytes.
 3. An offline signer independently revalidates immutable candidate bytes and emits a signature fragment.
 4. The assembler combines fragments and publication metadata without gaining access to signing material.
-5. Deployment tooling may publish already assembled bytes; it never signs, executes Catalog artifacts, or stores signing material.
+5. The materializer may copy already assembled bytes into a protected Git worktree; it never signs, executes Catalog artifacts, invokes Git, accesses a network, or stores signing material.
 
-Candidate building, signing, assembly, and deployment are separate commands and
+Candidate building, signing, assembly, and materialization are separate commands and
 separate review surfaces. Candidate building, offline fragment signing,
-threshold assembly, and conditional object-store deployment are implemented.
-Production resources are not created or inferred by these implementations.
+threshold assembly, and protected Git-tree materialization are implemented.
+No online subscription origin is created or inferred by these implementations.
 
 ## Candidate boundary
 
@@ -100,29 +100,37 @@ builds a deterministic stored ZIP package with an exact allowlisted file tree.
 The package verifier rejects traversal, duplicate, missing, extra, executable,
 symlink, non-canonical metadata, length, and byte mismatches.
 
-## Deployment boundary
+## Publication boundary
 
-Deployment consumes assembled bytes and a prefix-scoped object-store
-credential. Immutable objects, manifest/root archives, and packages use
-conditional create followed by HEAD, full GET, and byte-range verification.
-Only after every release immutable passes does deploy conditionally update live
-manifest.json. Live root.json is a separate conditional transaction so two S3
-objects are never presented as an atomic write.
+Publication is a protected Git transaction. The materializer accepts one exact
+assembled release, validates all live and immutable bytes, and stages the full
+source tree in a local worktree. Existing objects, manifest archives, root
+archives, and packages are retained and cannot be overwritten.
 
-The R2 adapter uses the official AWS SDK, R2 region auto, Content-MD5, exact
-ETag conditions, and identity content encoding. It does not expose delete,
-copy, bucket administration, candidate construction, assembly, or key-provider
-operations. Real R2 and custom-domain verification is an external gate.
+The release verifier compares a pull request tree with its exact base. It
+rejects immutable deletion, byte or mode mutation, unknown release paths, and
+changes that mix release bytes with tooling or policy. It then parses every
+current signed manifest and root, verifies their exact immutable archives,
+checks threshold signatures and forward-only versions/revocations, checks all
+referenced object digests and lengths, and verifies the deterministic package.
+Root transitions and their manifests must satisfy both the prior and next
+thresholds. The read-only workflow cannot push, merge, sign, or obtain
+credentials.
+
+The protected `main` branch is the release pointer. This boundary does not
+enable GitHub raw as a supported origin and does not create object storage,
+Cloudflare, DNS, Kubernetes, or other live infrastructure.
 
 ## Directory ownership
 
 | Path | Owner | Allowed content |
 | --- | --- | --- |
-| `cmd/catalog-publisher` | Publisher maintainers | Candidate CLI entry point |
+| `cmd/catalog-publisher` | Publisher maintainers | Candidate and protected release-tree CLI |
 | `cmd/catalog-signer` | Offline signing operators | Offline signer CLI entry point |
 | `cmd/catalog-assembler` | Release operators | Fragment assembly CLI entry point |
 | `internal/catalogv1` | Publisher maintainers | Canonical V1 models and encoding |
 | `internal/signing` | Offline signing operators | Candidate revalidation, provider interface, encrypted-file fallback, fragment validation |
-| `catalog/sources` | Catalog content owners | Strict declarative source documents |
+| `catalog/definitions` | Catalog content owners | Strict declarative unsigned source documents |
+| `catalog/sources` | Release operators | Threshold-signed public release tree |
 | `fixtures/v1` | Test maintainers | Synthetic positive and negative fixtures |
-| `deploy` | Release operators | Publication-side docs and integration |
+| `deploy` | Release operators | Protected repository publication policy |

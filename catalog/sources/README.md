@@ -1,19 +1,29 @@
-# Catalog sources
+# Signed release tree
 
-Owner: Catalog content owners.
+Owner: release operators.
 
-Only strict declarative source content belongs here. Content must not contain credentials, signing material, executable build hooks, deployment configuration, or platform source code.
+Only already assembled, threshold-signed public bytes belong here. Declarative
+unsigned content lives under `catalog/definitions`; signing keys and credentials
+never belong in either tree.
 
-Every source lives in `<source-id>/source.yaml`; declared object bytes live
-under that same root at `objects/sha256/<first-2>/<sha256>`. The directory name,
-`sourceId`, permission policy, and object paths must match exactly.
+Each published source has this fixed layout:
 
-The two accepted roots are deliberately separate:
+```text
+<source-id>/
+  manifest.json
+  root.json
+  objects/sha256/<first-2>/<digest>
+  archive/<20-digit-version>/<manifest-digest>/manifest.json
+  roots/<20-digit-root-version>/<root-digest>/root.json
+  packages/<20-digit-version>/<manifest-digest>/<package>.ucp
+```
 
-| Source | Permissions |
-| --- | --- |
-| `unlock-official-linux-amd64-static` | `metadata`, `detection-data`, `routing-data` |
-| `unlock-official-linux-amd64-static-exec` | the data permissions plus explicit `executable` |
+Objects, archives, roots, and packages are append-only. A release PR may update
+live `manifest.json` and `root.json` only when the same commit adds all required
+immutable bytes. Existing immutable paths may never be modified, removed, or
+mode-changed. Manifest and root versions move forward only; existing
+revocations cannot be removed or weakened.
 
-The checked content is synthetic conformance data and is not deployed by the
-candidate command.
+`main` is the only release pointer. Repository checks validate the complete
+tree and reject mixed release/tooling changes. This repository does not grant
+the Unlock Platform any built-in URL, source identity, or trust root.

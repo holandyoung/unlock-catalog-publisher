@@ -9,9 +9,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/holandyoung/unlock-catalog-publisher/internal/catalogv1"
-	"github.com/holandyoung/unlock-catalog-publisher/internal/package"
-	"github.com/holandyoung/unlock-catalog-publisher/internal/signing"
+	"github.com/holandyoung/unlock-catalog/internal/catalogv1"
+	"github.com/holandyoung/unlock-catalog/internal/package"
+	"github.com/holandyoung/unlock-catalog/internal/signing"
 )
 
 type Options struct {
