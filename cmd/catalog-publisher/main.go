@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -11,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/holandyoung/unlock-catalog-publisher/internal/cohort"
-	"github.com/holandyoung/unlock-catalog-publisher/internal/policy"
+	"github.com/holandyoung/unlock-catalog/internal/cohort"
+	"github.com/holandyoung/unlock-catalog/internal/policy"
 )
 
 func main() {
@@ -24,22 +23,24 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) error {
 	if len(args) == 0 {
-		return fmt.Errorf("usage: catalog-publisher candidate|deploy")
+		return fmt.Errorf("usage: catalog-publisher candidate|materialize|verify-release")
 	}
 	switch args[0] {
 	case "candidate":
 		return runCandidate(args[1:], getenv, stdout, stderr)
-	case "deploy":
-		return runDeploy(context.Background(), args[1:], getenv, stdout, stderr)
+	case "materialize":
+		return runMaterialize(args[1:], stdout, stderr)
+	case "verify-release":
+		return runVerifyRelease(args[1:], stdout, stderr)
 	default:
-		return fmt.Errorf("usage: catalog-publisher candidate|deploy")
+		return fmt.Errorf("usage: catalog-publisher candidate|materialize|verify-release")
 	}
 }
 
 func runCandidate(args []string, getenv func(string) string, stdout, stderr io.Writer) error {
 	flags := flag.NewFlagSet("candidate", flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	sourcesRoot := flags.String("sources", "catalog/sources", "declarative source root")
+	sourcesRoot := flags.String("sources", "catalog/definitions", "declarative source root")
 	outputRoot := flags.String("output", "", "new candidate output directory")
 	if err := flags.Parse(args); err != nil {
 		return err

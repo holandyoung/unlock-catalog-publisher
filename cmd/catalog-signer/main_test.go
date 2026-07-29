@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"filippo.io/age"
-	"github.com/holandyoung/unlock-catalog-publisher/internal/signing"
+	"github.com/holandyoung/unlock-catalog/internal/signing"
 )
 
 func TestInspectCommandReportsOnlySafeMetadata(t *testing.T) {

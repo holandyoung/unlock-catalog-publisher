@@ -1,6 +1,6 @@
 package signing
 
-import "github.com/holandyoung/unlock-catalog-publisher/internal/catalogv1"
+import "github.com/holandyoung/unlock-catalog/internal/catalogv1"
 
 const (
 	manifestPayloadName = "manifest.payload.json"

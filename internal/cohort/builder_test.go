@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/holandyoung/unlock-catalog-publisher/internal/catalogv1"
-	"github.com/holandyoung/unlock-catalog-publisher/internal/policy"
+	"github.com/holandyoung/unlock-catalog/internal/catalogv1"
+	"github.com/holandyoung/unlock-catalog/internal/policy"
 	"gopkg.in/yaml.v3"
 )
 
@@ -203,7 +203,7 @@ func TestBuildCandidateRejectsObjectMismatchAndUnsafeFiles(t *testing.T) {
 }
 
 func TestCheckedSourcesMatchGoldenCandidate(t *testing.T) {
-	sources, err := filepath.Glob(filepath.Join("..", "..", "catalog", "sources", "*", "source.yaml"))
+	sources, err := filepath.Glob(filepath.Join("..", "..", "catalog", "definitions", "*", "source.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}

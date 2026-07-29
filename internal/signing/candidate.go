@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/holandyoung/unlock-catalog-publisher/internal/catalogv1"
-	"github.com/holandyoung/unlock-catalog-publisher/internal/policy"
+	"github.com/holandyoung/unlock-catalog/internal/catalogv1"
+	"github.com/holandyoung/unlock-catalog/internal/policy"
 )
 
 var digestPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)

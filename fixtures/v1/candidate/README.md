@@ -1,6 +1,6 @@
 # Catalog V1 candidate fixtures
 
-`valid/` is generated from `catalog/sources/` with
+`valid/` is generated from `catalog/definitions/` with
 `SOURCE_DATE_EPOCH=1785312000`. It contains unsigned canonical payloads,
 signing requests, and content-addressed objects only.
 

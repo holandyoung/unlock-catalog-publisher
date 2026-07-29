@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/holandyoung/unlock-catalog-publisher/internal/signing"
+	"github.com/holandyoung/unlock-catalog/internal/signing"
 )
 
 func main() {

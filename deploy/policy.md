@@ -1,57 +1,42 @@
-# Conditional publication policy
+# Protected Git release policy
 
-Release operators may publish only an already assembled, reviewed Catalog V1
-release. The deploy process has a prefix-scoped R2 credential and public release
-bytes; it has no candidate builder, key provider, or authority to change signed
-content.
+Release operators materialize only an already assembled and reviewed Catalog
+V1 release. The materializer has public signed bytes and the current repository
+tree; it has no key provider, GitHub credential, network operation, or authority
+to change signed content.
 
-## Object layout and order
+## Transaction
 
-For each source under the configured prefix, deploy maps assembled bytes to:
+1. Start a feature worktree from the latest `origin/main`.
+2. Run `catalog-publisher materialize` with one exact assembled release.
+3. Review the complete diff and run `catalog-publisher verify-release` against
+   the base checkout.
+4. Commit the live manifest/root and every new immutable object, archive, root,
+   and package in one release commit.
+5. Push the feature branch and merge only after all required checks pass and
+   every conversation is resolved.
 
-    objects/sha256/<first-2>/<digest>
-    archive/<20-digit-version>/<manifest-digest>/manifest.json
-    roots/<20-digit-root-version>/<root-digest>/root.json
-    packages/<20-digit-version>/<manifest-digest>/<package>.ucp
-    manifest.json
-    root.json
+The protected `main` tree is the release pointer. Existing paths under
+`objects/`, `archive/`, `roots/`, and `packages/` are immutable: deletion,
+byte changes, or mode changes fail verification. Live `manifest.json` and
+`root.json` must have exact immutable archive copies in the same tree. Release
+PRs cannot mix tooling, policy, or unrelated file changes. Manifest and root
+versions must move forward, and existing revocations cannot be removed or
+weakened. A root transition and its live manifest must satisfy both the prior
+and next thresholds.
 
-Every immutable key is created with If-None-Match: *. A pre-existing key is
-accepted only when HEAD, full GET, and a bytes=0-0 range readback prove the same
-ETag, length, SHA256 metadata, Content-Type, Cache-Control, identity encoding,
-and bytes. Uploads bind the body with Content-MD5 and requests force
-Accept-Encoding: identity.
+The materializer validates the complete assembled input before writing the
+worktree. It never invokes Git, signs, rebuilds, pretty-prints, or downloads
+bytes. The release workflow has read-only repository permission and no secrets;
+it compares the PR tree with its exact base and cannot push or merge.
 
-The manifest transaction uploads and verifies every immutable object before it
-updates live manifest.json. Existing live bytes require the exact current ETag
-in If-Match; initial publication uses If-None-Match: *. Collision, partial
-upload, readback drift, or ETag drift stops before the live write, so the old
-live pointer remains unchanged. Retrying after a crash revalidates identical
-immutable bytes instead of overwriting them.
+## Recovery
 
-Root publication is a separate transaction. It verifies the immutable root
-archive before conditionally updating live root.json. Operators publish all
-required bridge manifests before this operation. The tool does not claim that
-two independent live object writes are one atomic transaction.
+Before merge, abandon the feature branch. After a non-security release error,
+use another protected PR to restore live bytes from a verified immutable
+archive while retaining all history. Root rotations and revocations never roll
+back; recover with a higher signed version or keep clients fail closed.
 
-## Authority and recovery
-
-The credential must be restricted to the exact bucket prefix and only the
-PutObject, HeadObject, and GetObject operations needed by this workflow.
-Deployment must not use delete or copy operations to imitate a transaction.
-Automatic rollback is forbidden for revocation or root security transitions;
-publish a higher valid version after review.
-
-The reusable workflow downloads only an assembled artifact from its calling
-workflow run. It does not build candidates or perform assembly. A protected
-caller must review the artifact digest before invoking deploy.
-
-No real bucket, prefix, endpoint, principal, or synthetic live publish may be
-created or exercised until Task 10 records explicit authorization for the exact
-external operations. Fake-S3 tests are the only Task 9 smoke.
-
-The adapter follows Cloudflare's documented
-[S3 compatibility](https://developers.cloudflare.com/r2/api/s3/api/) and
-[strong consistency](https://developers.cloudflare.com/r2/reference/consistency/)
-contracts. Those documents are design inputs, not evidence that production
-resources already exist or satisfy the contract.
+GitHub raw is not enabled or promised as a subscription origin by this policy.
+No R2 bucket, Cloudflare domain, DNS record, principal, production prefix,
+Kubernetes Service, HTTPRoute, or Worker is part of this release boundary.

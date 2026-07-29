@@ -32,20 +32,20 @@ func TestSourceDateEpochIsRequiredAndStrict(t *testing.T) {
 	}
 }
 
-func TestDeployCommandValidatesTargetAndCASBeforeCredentials(t *testing.T) {
+func TestMaterializeCommandValidatesInputsWithoutCredentials(t *testing.T) {
 	release := filepath.Join("..", "..", "fixtures", "v1", "signed", "positive", "data", "release")
 	for name, args := range map[string][]string{
-		"both CAS modes": {"deploy", "--target", "manifest", "--release", release, "--initial-live", "--expected-live-etag", "etag"},
-		"unknown target": {"deploy", "--target", "sign", "--release", release, "--initial-live"},
+		"missing release": {"materialize", "--repository", t.TempDir()},
+		"unknown flag":    {"materialize", "--release", release, "--credential", "forbidden"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			var stdout, stderr bytes.Buffer
 			err := run(args, func(string) string { return "" }, &stdout, &stderr)
 			if err == nil || strings.Contains(err.Error(), "usage: catalog-publisher candidate") {
-				t.Fatalf("deploy command was not independently validated: %v", err)
+				t.Fatalf("materialize command was not independently validated: %v", err)
 			}
 			if stdout.Len() != 0 {
-				t.Fatalf("failed deploy wrote stdout: %q", stdout.String())
+				t.Fatalf("failed materialize wrote stdout: %q", stdout.String())
 			}
 		})
 	}

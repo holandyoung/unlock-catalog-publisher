@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/holandyoung/unlock-catalog-publisher/internal/catalogv1"
+	"github.com/holandyoung/unlock-catalog/internal/catalogv1"
 )
 
 const (
