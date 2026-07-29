@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -22,14 +23,25 @@ func main() {
 }
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) error {
-	if len(args) == 0 || args[0] != "candidate" {
-		return fmt.Errorf("usage: catalog-publisher candidate --output DIR [--sources DIR]")
+	if len(args) == 0 {
+		return fmt.Errorf("usage: catalog-publisher candidate|deploy")
 	}
+	switch args[0] {
+	case "candidate":
+		return runCandidate(args[1:], getenv, stdout, stderr)
+	case "deploy":
+		return runDeploy(context.Background(), args[1:], getenv, stdout, stderr)
+	default:
+		return fmt.Errorf("usage: catalog-publisher candidate|deploy")
+	}
+}
+
+func runCandidate(args []string, getenv func(string) string, stdout, stderr io.Writer) error {
 	flags := flag.NewFlagSet("candidate", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	sourcesRoot := flags.String("sources", "catalog/sources", "declarative source root")
 	outputRoot := flags.String("output", "", "new candidate output directory")
-	if err := flags.Parse(args[1:]); err != nil {
+	if err := flags.Parse(args); err != nil {
 		return err
 	}
 	if flags.NArg() != 0 || *outputRoot == "" {

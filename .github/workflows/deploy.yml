@@ -1,0 +1,84 @@
+name: deploy
+
+on:
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: Assembled release artifact from the calling workflow run
+        required: true
+        type: string
+      target:
+        description: Live pointer to publish (manifest or root)
+        required: true
+        type: string
+      prefix:
+        description: Bucket prefix containing v1/sources
+        required: true
+        type: string
+      r2_endpoint:
+        description: R2 S3 API endpoint
+        required: true
+        type: string
+      r2_bucket:
+        description: R2 bucket name
+        required: true
+        type: string
+      initial_live:
+        description: Create an absent live pointer
+        required: true
+        type: boolean
+      expected_live_etag:
+        description: Exact current ETag when initial_live is false
+        required: false
+        default: ""
+        type: string
+    secrets:
+      R2_ACCESS_KEY_ID:
+        required: true
+      R2_SECRET_ACCESS_KEY:
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: catalog-deploy-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: assembled
+      - name: Publish assembled bytes conditionally
+        shell: bash
+        env:
+          DEPLOY_TARGET: ${{ inputs.target }}
+          INITIAL_LIVE: ${{ inputs.initial_live }}
+          EXPECTED_LIVE_ETAG: ${{ inputs.expected_live_etag }}
+          PUBLISH_PREFIX: ${{ inputs.prefix }}
+          R2_ENDPOINT: ${{ inputs.r2_endpoint }}
+          R2_BUCKET: ${{ inputs.r2_bucket }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          args=(--target "$DEPLOY_TARGET" --release assembled --prefix "$PUBLISH_PREFIX")
+          if [[ "$INITIAL_LIVE" == "true" ]]; then
+            [[ -z "$EXPECTED_LIVE_ETAG" ]]
+            args+=(--initial-live)
+          else
+            [[ -n "$EXPECTED_LIVE_ETAG" ]]
+            args+=(--expected-live-etag "$EXPECTED_LIVE_ETAG")
+          fi
+          go run ./cmd/catalog-publisher deploy "${args[@]}"
