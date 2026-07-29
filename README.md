@@ -47,4 +47,28 @@ Each output contains only `manifest.payload.json`, `signing-request.json`, and
 content-addressed `objects/`. It contains no signature, key, deploy credential,
 network operation, helper invocation, or artifact execution capability.
 
-Signing, assembly, and deployment remain separate later tasks.
+## Inspect and sign offline
+
+The signer revalidates the complete candidate before opening a key provider:
+
+```bash
+go run ./cmd/catalog-signer inspect --candidate /offline/candidate/source-id
+go run ./cmd/catalog-signer sign \
+  --candidate /offline/candidate/source-id \
+  --expect-request-digest SHA256_FROM_INSPECT \
+  --encrypted-key /offline/custody/key.age \
+  --passphrase-file /offline/custody/passphrase \
+  --output /offline/fragments/source-id-test-a.json
+```
+
+Both sensitive input files must be owner-only, non-executable regular files and
+must not be symlinks. The signer emits only `requestDigest`, `keyId`, and
+`signature`. It does not create keys, mutate candidates, access a network,
+execute candidate content, assemble a threshold, or deploy bytes.
+
+The signer requires Linux `openat2` no-symlink resolution. Candidate files and
+directories must retain their deterministic `0644`/`0755` modes. The fragment
+output must be outside the candidate directory, and the expected request digest
+must be copied from a separately reviewed `inspect` result.
+
+Assembly and deployment remain separate later tasks.
