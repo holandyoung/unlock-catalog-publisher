@@ -1,0 +1,10 @@
+* @holandyoung
+
+/.github/ @holandyoung
+/cmd/catalog-publisher/ @holandyoung
+/cmd/catalog-signer/ @holandyoung
+/cmd/catalog-assembler/ @holandyoung
+/internal/catalogv1/ @holandyoung
+/catalog/sources/ @holandyoung
+/fixtures/v1/ @holandyoung
+/deploy/ @holandyoung
