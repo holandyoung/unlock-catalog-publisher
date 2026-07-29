@@ -71,4 +71,40 @@ directories must retain their deterministic `0644`/`0755` modes. The fragment
 output must be outside the candidate directory, and the expected request digest
 must be copied from a separately reviewed `inspect` result.
 
-Assembly and deployment remain separate later tasks.
+## Assemble a signed release
+
+The assembler consumes only reviewed candidates, public roots, and independent
+signature fragments. It has no key provider and cannot sign or modify candidate
+bytes. First assemble an R1-to-R2 bridge that retains enough shared key material
+to satisfy both 2-of-3 thresholds for at least 90 days:
+
+```bash
+go run ./cmd/catalog-assembler root \
+  --current-root /reviewed/roots/r1.json \
+  --next-root /reviewed/roots/r2.json \
+  --now 2026-07-29T08:00:00Z \
+  --fragment /offline/fragments/root-a.json \
+  --fragment /offline/fragments/root-b.json \
+  --output /release/r2.signed.json
+```
+
+Then assemble a source release with its exact identity and permissions:
+
+```bash
+go run ./cmd/catalog-assembler release \
+  --candidate /reviewed/candidate/source-id \
+  --current-root /reviewed/roots/r1.json \
+  --signed-root /release/r2.signed.json \
+  --source-id source-id \
+  --permissions metadata,detection-data,routing-data \
+  --now 2026-07-29T08:00:00Z \
+  --fragment /offline/fragments/manifest-a.json \
+  --fragment /offline/fragments/manifest-b.json \
+  --output /release/source-id-v1
+```
+
+The new output directory contains `manifest.json`, `root.json`, immutable
+objects, a versioned archive, and a deterministic `.ucp` package. Pass the prior
+signed manifest with `--prior-manifest` when one exists so cumulative
+revocations cannot be removed or downgraded. Deployment remains a separate
+later task.
