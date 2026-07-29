@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -27,6 +29,25 @@ func TestSourceDateEpochIsRequiredAndStrict(t *testing.T) {
 	want := time.Unix(1_785_312_000, 0).UTC()
 	if !got.Equal(want) || got.Location() != time.UTC {
 		t.Fatalf("epoch = %s want %s UTC", got, want)
+	}
+}
+
+func TestDeployCommandValidatesTargetAndCASBeforeCredentials(t *testing.T) {
+	release := filepath.Join("..", "..", "fixtures", "v1", "signed", "positive", "data", "release")
+	for name, args := range map[string][]string{
+		"both CAS modes": {"deploy", "--target", "manifest", "--release", release, "--initial-live", "--expected-live-etag", "etag"},
+		"unknown target": {"deploy", "--target", "sign", "--release", release, "--initial-live"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			err := run(args, func(string) string { return "" }, &stdout, &stderr)
+			if err == nil || strings.Contains(err.Error(), "usage: catalog-publisher candidate") {
+				t.Fatalf("deploy command was not independently validated: %v", err)
+			}
+			if stdout.Len() != 0 {
+				t.Fatalf("failed deploy wrote stdout: %q", stdout.String())
+			}
+		})
 	}
 }
 

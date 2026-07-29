@@ -15,8 +15,9 @@ Cross-repository compatibility is frozen by versioned candidate and negative fix
 5. Deployment tooling may publish already assembled bytes; it never signs, executes Catalog artifacts, or stores signing material.
 
 Candidate building, signing, assembly, and deployment are separate commands and
-separate review surfaces. Candidate building, offline fragment signing, and
-threshold assembly are implemented; deployment is not.
+separate review surfaces. Candidate building, offline fragment signing,
+threshold assembly, and conditional object-store deployment are implemented.
+Production resources are not created or inferred by these implementations.
 
 ## Candidate boundary
 
@@ -98,6 +99,20 @@ emits signed manifest and root envelopes, archives the versioned metadata, and
 builds a deterministic stored ZIP package with an exact allowlisted file tree.
 The package verifier rejects traversal, duplicate, missing, extra, executable,
 symlink, non-canonical metadata, length, and byte mismatches.
+
+## Deployment boundary
+
+Deployment consumes assembled bytes and a prefix-scoped object-store
+credential. Immutable objects, manifest/root archives, and packages use
+conditional create followed by HEAD, full GET, and byte-range verification.
+Only after every release immutable passes does deploy conditionally update live
+manifest.json. Live root.json is a separate conditional transaction so two S3
+objects are never presented as an atomic write.
+
+The R2 adapter uses the official AWS SDK, R2 region auto, Content-MD5, exact
+ETag conditions, and identity content encoding. It does not expose delete,
+copy, bucket administration, candidate construction, assembly, or key-provider
+operations. Real R2 and custom-domain verification is an external gate.
 
 ## Directory ownership
 
