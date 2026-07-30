@@ -1,0 +1,6 @@
+schemaVersion: 1
+releasePrefix: catalog/sources
+copyMode: exact-bytes
+immutablePaths: append-only
+readbackVerification: required
+mirrors: []
