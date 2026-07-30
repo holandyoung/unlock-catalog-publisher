@@ -128,7 +128,7 @@ func TestRawOriginRejectsHTTPAndNonCanonicalBaseURLs(t *testing.T) {
 		"http://example.com/catalog/sources/",
 		"https://user@example.com/catalog/sources/",
 		"https://example.com/catalog/sources",
-		"https://example.com/catalog/sources/?token=secret",
+		"https://example.com/catalog/sources/?auth=forbidden",
 		"https://example.com/catalog/sources/#fragment",
 	} {
 		t.Run(fmt.Sprintf("%x", baseURL), func(t *testing.T) {
