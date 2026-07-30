@@ -26,28 +26,38 @@ ONLY, and must never be used for production custody or authorization.
 The data and exec cases use disjoint roots and exact permission sets. Each
 positive case includes an R1 trust root, an R1-to-R2 threshold-signed bridge,
 a manifest accepted by both roots, immutable objects, archive bytes, and a
-deterministic tar.zst package. The negative manifest mutates signed payload bytes
-without changing its signatures.
+deterministic tar.zst package. The negative cases isolate bad signature,
+trust root, source identity, permission, artifact digest, artifact length,
+artifact path, revocation, and offline package behavior.
 `
 
 type signedFixtureMetadata struct {
 	ExpectedSourceID   string                 `json:"expectedSourceId"`
 	GrantedPermissions []catalogv1.Permission `json:"grantedPermissions"`
 	VerifyAt           time.Time              `json:"verifyAt"`
+	ExpectedFailure    string                 `json:"expectedFailure,omitempty"`
+	ArtifactID         string                 `json:"artifactId,omitempty"`
 }
 
 func TestSignedFixturesMatchGenerated(t *testing.T) {
-	generated := filepath.Join(t.TempDir(), "signed")
+	generatedRoot := t.TempDir()
+	generated := filepath.Join(generatedRoot, "signed")
 	generateSignedFixtures(t, generated)
-	expected := filepath.Join("..", "..", "fixtures", "v1", "signed")
+	generateFixtureProvenance(t, generatedRoot)
+	expectedRoot := filepath.Join("..", "..", "fixtures", "v1")
+	expected := filepath.Join(expectedRoot, "signed")
 	if os.Getenv("UPDATE_FIXTURES") == "1" {
 		if err := os.RemoveAll(expected); err != nil {
 			t.Fatal(err)
 		}
 		copyFixtureTree(t, generated, expected)
+		writeFixtureFile(t, expectedRoot, "PROVENANCE.md", mustRead(t, filepath.Join(generatedRoot, "PROVENANCE.md")))
 	}
 	if got, want := fixtureTree(t, generated), fixtureTree(t, expected); !reflect.DeepEqual(got, want) {
 		t.Fatalf("signed fixture drift\ngenerated: %v\nexpected: %v", sortedFixtureNames(got), sortedFixtureNames(want))
+	}
+	if got, want := mustRead(t, filepath.Join(generatedRoot, "PROVENANCE.md")), mustRead(t, filepath.Join(expectedRoot, "PROVENANCE.md")); !bytes.Equal(got, want) {
+		t.Fatal("fixture provenance drift")
 	}
 }
 
@@ -74,6 +84,31 @@ func TestSignedFixturesSeparateDataAndExecAuthority(t *testing.T) {
 	}
 }
 
+func TestPublishedConformanceFixtureContract(t *testing.T) {
+	root := filepath.Join("..", "..", "fixtures", "v1")
+	required := []string{
+		"PROVENANCE.md",
+		"signed/negative/bad-signature/manifest.json",
+		"signed/negative/bad-root/current-root.json",
+		"signed/negative/bad-source-id/metadata.json",
+		"signed/negative/bad-permission/metadata.json",
+		"signed/negative/bad-digest/artifact.bin",
+		"signed/negative/bad-length/artifact.bin",
+		"signed/negative/bad-path/manifest.json",
+		"signed/negative/bad-revocation/manifest.json",
+		"signed/negative/bad-package/unlock-catalog-package-v1.tar.zst",
+	}
+	for _, relative := range required {
+		info, err := os.Stat(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatalf("required conformance fixture %q: %v", relative, err)
+		}
+		if !info.Mode().IsRegular() || info.Mode().Perm() != 0o644 {
+			t.Fatalf("required conformance fixture %q must be a mode 0644 regular file", relative)
+		}
+	}
+}
+
 func generateSignedFixtures(t *testing.T, output string) {
 	t.Helper()
 	writeFixtureFile(t, output, "README.md", []byte(signedFixtureReadme))
@@ -90,6 +125,7 @@ func generateSignedFixtures(t *testing.T, output string) {
 		t.Fatal(err)
 	}
 	writeFixtureFile(t, output, filepath.Join("negative", "data-manifest-payload-mutated.json"), content)
+	generateConformanceNegativeFixtures(t, output, dataManifest)
 }
 
 func generateSignedFixture(t *testing.T, output, name, sourceID string, keyIDs []string) []byte {

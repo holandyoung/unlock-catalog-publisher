@@ -8,5 +8,6 @@ ONLY, and must never be used for production custody or authorization.
 The data and exec cases use disjoint roots and exact permission sets. Each
 positive case includes an R1 trust root, an R1-to-R2 threshold-signed bridge,
 a manifest accepted by both roots, immutable objects, archive bytes, and a
-deterministic tar.zst package. The negative manifest mutates signed payload bytes
-without changing its signatures.
+deterministic tar.zst package. The negative cases isolate bad signature,
+trust root, source identity, permission, artifact digest, artifact length,
+artifact path, revocation, and offline package behavior.
