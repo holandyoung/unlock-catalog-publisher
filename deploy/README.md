@@ -8,4 +8,7 @@ identifiers, or platform runtime dependencies.
 
 `policy.md` defines the protected Git transaction. `repository.yaml` records
 only public repository metadata, including the anonymous GitHub Raw BaseURL
-template. The full transport contract is in [`../docs/ORIGINS.md`](../docs/ORIGINS.md).
+template. `mirrors.yaml` records the provider-neutral exact-byte replication
+policy and the reviewed public mirror inventory; an empty inventory authorizes
+no live destination. The full transport contract is in
+[`../docs/ORIGINS.md`](../docs/ORIGINS.md).
