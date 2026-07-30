@@ -3,4 +3,5 @@ repository: holandyoung/unlock-catalog
 visibility: public
 defaultBranch: main
 releasePrefix: catalog/sources
-onlineOriginEnabled: false
+onlineOriginEnabled: true
+onlineOriginBaseURLTemplate: "https://raw.githubusercontent.com/holandyoung/unlock-catalog/main/catalog/sources/{sourceId}/"

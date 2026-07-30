@@ -105,7 +105,9 @@ go run ./cmd/catalog-assembler release \
 ```
 
 The new output directory contains `manifest.json`, `root.json`, immutable
-objects, a versioned archive, and a deterministic `.ucp` package. Pass the prior
+objects, a versioned archive, and a deterministic
+`unlock-catalog-package-v1.tar.zst` package. The complete package contract is in
+[`docs/OFFLINE-PACKAGE.md`](docs/OFFLINE-PACKAGE.md). Pass the prior
 signed manifest with `--prior-manifest` when one exists so cumulative
 revocations cannot be removed or downgraded. Deployment remains a separate
 step.
@@ -135,4 +137,5 @@ The protected `main` branch is the publication pointer. Existing objects,
 archives, roots, and packages cannot be removed or changed. The live manifest
 and root must resolve to exact immutable archives, every referenced object must
 match its digest and length, and the deterministic package must match the live
-release. GitHub raw is not yet enabled or promised as a subscription origin.
+release. The stable GitHub Raw BaseURL and equivalent self-hosted HTTPS contract
+are defined in [`docs/ORIGINS.md`](docs/ORIGINS.md).

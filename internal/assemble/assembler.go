@@ -141,9 +141,14 @@ func Assemble(options Options, fragments []signing.Fragment) (Release, error) {
 			return Release{}, err
 		}
 	}
-	packageName := fmt.Sprintf("%s-v%020d.ucp", manifest.SourceID, manifest.Version)
+	packageName := packagefile.PackageFileName
 	packagePath := filepath.Join(staging, packageName)
-	if err := packagefile.BuildPackage(staging, packagePath, expected); err != nil {
+	rootVersion := options.PublishedRoot.Signed.Version
+	if err := packagefile.BuildPackage(packagefile.BuildOptions{
+		Root: staging, Output: packagePath, SourceID: manifest.SourceID,
+		ManifestDigest: request.PayloadSHA256, ManifestEnvelopeSHA256: catalogv1.DigestBytes(manifestBytes),
+		RootVersion: &rootVersion, Files: expected,
+	}); err != nil {
 		return Release{}, err
 	}
 	archiveRelative := filepath.Join("archive", fmt.Sprintf("%020d", manifest.Version))

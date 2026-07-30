@@ -162,7 +162,7 @@ func testRelease(sourceID, manifest, root, object string) Release {
 			{Path: sourcePath(sourceID, "objects/sha256/"+objectDigest[:2]+"/"+objectDigest), Body: []byte(object)},
 			{Path: sourcePath(sourceID, "archive/"+version+"/"+manifestDigest+"/manifest.json"), Body: []byte(manifest)},
 			{Path: sourcePath(sourceID, "roots/"+version+"/"+rootDigest+"/root.json"), Body: []byte(root)},
-			{Path: sourcePath(sourceID, "packages/"+version+"/"+manifestDigest+"/catalog-test-data.ucp"), Body: []byte("package")},
+			{Path: sourcePath(sourceID, "packages/"+version+"/"+manifestDigest+"/unlock-catalog-package-v1.tar.zst"), Body: []byte("package")},
 		},
 	}
 }

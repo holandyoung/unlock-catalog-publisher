@@ -77,15 +77,12 @@ func TestMaterializeCommandValidationFailureLeavesRepositoryUnchanged(t *testing
 			}
 		},
 		"duplicate package": func(root string) {
-			packages, err := filepath.Glob(filepath.Join(root, "*.ucp"))
-			if err != nil || len(packages) != 1 {
-				t.Fatalf("packages = %v err=%v", packages, err)
-			}
-			content, err := os.ReadFile(packages[0])
+			packagePath := filepath.Join(root, "unlock-catalog-package-v1.tar.zst")
+			content, err := os.ReadFile(packagePath)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := os.WriteFile(filepath.Join(root, "duplicate.ucp"), content, 0o644); err != nil {
+			if err := os.WriteFile(filepath.Join(root, "duplicate.tar.zst"), content, 0o644); err != nil {
 				t.Fatal(err)
 			}
 		},
@@ -163,7 +160,7 @@ func TestReleaseTreeChecksCurrentSemanticClosure(t *testing.T) {
 	if err != nil || len(manifestArchives) != 1 {
 		t.Fatalf("manifest archives = %v err=%v", manifestArchives, err)
 	}
-	packagePaths, err := filepath.Glob(filepath.Join(sourceRoot, "packages", "*", "*", "*.ucp"))
+	packagePaths, err := filepath.Glob(filepath.Join(sourceRoot, "packages", "*", "*", "unlock-catalog-package-v1.tar.zst"))
 	if err != nil || len(packagePaths) != 1 {
 		t.Fatalf("packages = %v err=%v", packagePaths, err)
 	}

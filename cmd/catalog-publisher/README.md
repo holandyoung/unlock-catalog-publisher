@@ -14,6 +14,7 @@ The implemented commands are:
 catalog-publisher candidate --output DIR [--sources DIR]
 catalog-publisher materialize --release DIR [--repository DIR]
 catalog-publisher verify-release --base DIR [--repository DIR] [--changed-file PATH ...]
+catalog-publisher verify-origin --base-url URL [--repository DIR]
 ```
 
 `SOURCE_DATE_EPOCH` is mandatory. `DIR` must not already exist, and output is
@@ -25,4 +26,6 @@ source directory while retaining immutable history. `verify-release` compares
 the candidate repository with an exact base, rejects mixed changes and any
 immutable deletion or mutation, prevents manifest/root/revocation rollback,
 then verifies the current signed release's signatures, archives, objects, and
-package. Neither command reads credentials or mutates a remote repository.
+package. `verify-origin` anonymously compares the protected local tree with one
+canonical HTTPS BaseURL; it performs no writes and accepts no credentials. The
+origin contract is documented in [`../../docs/ORIGINS.md`](../../docs/ORIGINS.md).

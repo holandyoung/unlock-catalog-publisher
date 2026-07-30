@@ -150,11 +150,8 @@ func loadRelease(releaseRoot string) (releaseArtifact, error) {
 			Body: rootBytes,
 		},
 	)
-	packagePaths, err := filepath.Glob(filepath.Join(releaseRoot, "*.ucp"))
-	if err != nil || len(packagePaths) != 1 {
-		return releaseArtifact{}, fmt.Errorf("release requires exactly one .ucp package")
-	}
-	packageName := filepath.Base(packagePaths[0])
+	packageName := packagefile.PackageFileName
+	packagePath := filepath.Join(releaseRoot, packageName)
 	packageBytes, err := readReleaseFile(releaseRoot, packageName)
 	if err != nil {
 		return releaseArtifact{}, err
@@ -162,7 +159,12 @@ func loadRelease(releaseRoot string) (releaseArtifact, error) {
 	if len(packageBytes) > repository.MaxReleaseFileBytes {
 		return releaseArtifact{}, fmt.Errorf("release package exceeds %d-byte limit", repository.MaxReleaseFileBytes)
 	}
-	if err := packagefile.VerifyPackage(packagePaths[0], expectedPackageFiles); err != nil {
+	rootVersionValue := signedRoot.Signed.Version
+	if err := packagefile.VerifyPackage(packagePath, packagefile.BuildOptions{
+		SourceID: manifest.Signed.SourceID, ManifestDigest: manifestDigest,
+		ManifestEnvelopeSHA256: catalogv1.DigestBytes(manifestBytes), RootVersion: &rootVersionValue,
+		Files: expectedPackageFiles,
+	}); err != nil {
 		return releaseArtifact{}, fmt.Errorf("verify release package: %w", err)
 	}
 	expectedReleaseFiles[packageName] = packageBytes
@@ -342,12 +344,13 @@ func verifyPublishedSource(sourceRoot, sourceID string) (publishedRelease, error
 		}
 		expectedPackageFiles[descriptor.Path] = content
 	}
-	packagePattern := filepath.Join(sourceRoot, "packages", version, manifestDigest, "*.ucp")
-	packagePaths, err := filepath.Glob(packagePattern)
-	if err != nil || len(packagePaths) != 1 {
-		return publishedRelease{}, fmt.Errorf("live release requires exactly one matching immutable package")
-	}
-	if err := packagefile.VerifyPackage(packagePaths[0], expectedPackageFiles); err != nil {
+	packagePath := filepath.Join(sourceRoot, "packages", version, manifestDigest, packagefile.PackageFileName)
+	rootVersionValue := signedRoot.Signed.Version
+	if err := packagefile.VerifyPackage(packagePath, packagefile.BuildOptions{
+		SourceID: manifest.Signed.SourceID, ManifestDigest: manifestDigest,
+		ManifestEnvelopeSHA256: catalogv1.DigestBytes(manifestBytes), RootVersion: &rootVersionValue,
+		Files: expectedPackageFiles,
+	}); err != nil {
 		return publishedRelease{}, fmt.Errorf("verify live package: %w", err)
 	}
 	return publishedRelease{
