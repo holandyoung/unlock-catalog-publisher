@@ -1,0 +1,72 @@
+name: raw-origin
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: raw-origin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: raw-origin
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Verify main and immutable commit origins
+        shell: bash
+        env:
+          RAW_BASE: https://raw.githubusercontent.com/holandyoung/unlock-catalog
+        run: |
+          set -euo pipefail
+          verify_raw() {
+            go run ./cmd/catalog-publisher verify-origin \
+              --repository . \
+              --base-url "$RAW_BASE/main/catalog/sources/" || return 1
+
+            for ref in main "$GITHUB_SHA"; do
+              url="$RAW_BASE/$ref/catalog/sources/README.md"
+              headers="$RUNNER_TEMP/raw-origin-$ref.headers"
+              body="$RUNNER_TEMP/raw-origin-$ref.body"
+              range="$RUNNER_TEMP/raw-origin-$ref.range"
+
+              curl --proto '=https' --tlsv1.2 --fail --silent --show-error \
+                --max-redirs 0 -H 'Accept-Encoding: identity' \
+                --dump-header "$headers" --output "$body" "$url" || return 1
+              cmp catalog/sources/README.md "$body" || return 1
+              if ! awk 'BEGIN { IGNORECASE=1 }
+                /^content-encoding:/ {
+                  value=$0
+                  sub(/^[^:]+:[[:space:]]*/, "", value)
+                  sub(/\r$/, "", value)
+                  if (tolower(value) != "identity") exit 1
+                }' "$headers"; then
+                return 1
+              fi
+
+              status="$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error \
+                --max-redirs 0 -H 'Accept-Encoding: identity' -H 'Range: bytes=0-0' \
+                --output "$range" --write-out '%{http_code}' "$url")" || return 1
+              [[ "$status" == "206" ]] || return 1
+              cmp <(head -c 1 catalog/sources/README.md) "$range" || return 1
+            done
+          }
+
+          deadline=$((SECONDS + 360))
+          until verify_raw; do
+            if (( SECONDS >= deadline )); then
+              echo "raw origin did not converge within six minutes"
+              exit 1
+            fi
+            sleep 15
+          done

@@ -23,7 +23,7 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) error {
 	if len(args) == 0 {
-		return fmt.Errorf("usage: catalog-publisher candidate|materialize|verify-release")
+		return fmt.Errorf("usage: catalog-publisher candidate|materialize|verify-release|verify-origin")
 	}
 	switch args[0] {
 	case "candidate":
@@ -32,8 +32,10 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) er
 		return runMaterialize(args[1:], stdout, stderr)
 	case "verify-release":
 		return runVerifyRelease(args[1:], stdout, stderr)
+	case "verify-origin":
+		return runVerifyOrigin(args[1:], stdout, stderr)
 	default:
-		return fmt.Errorf("usage: catalog-publisher candidate|materialize|verify-release")
+		return fmt.Errorf("usage: catalog-publisher candidate|materialize|verify-release|verify-origin")
 	}
 }
 

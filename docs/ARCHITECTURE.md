@@ -96,9 +96,10 @@ cannot be removed, retargeted, weakened, or version-downgraded.
 
 Assembly writes a new directory atomically. It copies immutable object bytes,
 emits signed manifest and root envelopes, archives the versioned metadata, and
-builds a deterministic stored ZIP package with an exact allowlisted file tree.
-The package verifier rejects traversal, duplicate, missing, extra, executable,
-symlink, non-canonical metadata, length, and byte mismatches.
+builds the deterministic USTAR+zstd package defined in
+[`OFFLINE-PACKAGE.md`](OFFLINE-PACKAGE.md). The package verifier rejects
+non-canonical archive bytes, traversal, duplicate, missing, extra, link, device,
+metadata, limit, length, digest, and byte mismatches.
 
 ## Publication boundary
 
@@ -117,9 +118,10 @@ Root transitions and their manifests must satisfy both the prior and next
 thresholds. The read-only workflow cannot push, merge, sign, or obtain
 credentials.
 
-The protected `main` branch is the release pointer. This boundary does not
-enable GitHub raw as a supported origin and does not create object storage,
-Cloudflare, DNS, Kubernetes, or other live infrastructure.
+The protected `main` branch is the release pointer and GitHub Raw exposes that
+tree through the ordinary HTTPS contract in [`ORIGINS.md`](ORIGINS.md). The
+transport creates no built-in platform URL, object storage, custom domain, DNS,
+Kubernetes, or other live infrastructure.
 
 ## Directory ownership
 

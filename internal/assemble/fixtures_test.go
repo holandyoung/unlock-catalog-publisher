@@ -26,7 +26,7 @@ ONLY, and must never be used for production custody or authorization.
 The data and exec cases use disjoint roots and exact permission sets. Each
 positive case includes an R1 trust root, an R1-to-R2 threshold-signed bridge,
 a manifest accepted by both roots, immutable objects, archive bytes, and a
-deterministic .ucp package. The negative manifest mutates signed payload bytes
+deterministic tar.zst package. The negative manifest mutates signed payload bytes
 without changing its signatures.
 `
 

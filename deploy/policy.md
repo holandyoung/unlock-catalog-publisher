@@ -37,6 +37,10 @@ use another protected PR to restore live bytes from a verified immutable
 archive while retaining all history. Root rotations and revocations never roll
 back; recover with a higher signed version or keep clients fail closed.
 
-GitHub raw is not enabled or promised as a subscription origin by this policy.
-No R2 bucket, Cloudflare domain, DNS record, principal, production prefix,
-Kubernetes Service, HTTPRoute, or Worker is part of this release boundary.
+GitHub Raw exposes protected `main` through the anonymous, stable HTTPS contract
+in [`../docs/ORIGINS.md`](../docs/ORIGINS.md). The push-main verifier may only
+read and compare those public bytes; it cannot publish or write back.
+
+No object-storage bucket, custom Catalog domain, DNS record, publication
+principal, production prefix, Kubernetes Service, HTTPRoute, or edge worker is
+part of this release boundary.

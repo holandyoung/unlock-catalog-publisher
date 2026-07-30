@@ -29,7 +29,7 @@ var (
 	objectPathPattern     = regexp.MustCompile(`^objects/sha256/([0-9a-f]{2})/(` + digestPattern + `)$`)
 	archivePathPattern    = regexp.MustCompile(`^archive/` + versionPattern + `/` + digestPattern + `/manifest\.json$`)
 	rootPathPattern       = regexp.MustCompile(`^roots/` + versionPattern + `/` + digestPattern + `/root\.json$`)
-	packagePathPattern    = regexp.MustCompile(`^packages/` + versionPattern + `/` + digestPattern + `/[a-z0-9][a-z0-9._-]*\.ucp$`)
+	packagePathPattern    = regexp.MustCompile(`^packages/` + versionPattern + `/` + digestPattern + `/unlock-catalog-package-v1\.tar\.zst$`)
 	ErrImmutableChanged   = errors.New("immutable release path changed")
 	ErrInvalidReleaseTree = errors.New("invalid release tree")
 )

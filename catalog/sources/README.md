@@ -15,7 +15,7 @@ Each published source has this fixed layout:
   objects/sha256/<first-2>/<digest>
   archive/<20-digit-version>/<manifest-digest>/manifest.json
   roots/<20-digit-root-version>/<root-digest>/root.json
-  packages/<20-digit-version>/<manifest-digest>/<package>.ucp
+  packages/<20-digit-version>/<manifest-digest>/unlock-catalog-package-v1.tar.zst
 ```
 
 Objects, archives, roots, and packages are append-only. A release PR may update
@@ -27,3 +27,6 @@ revocations cannot be removed or weakened.
 `main` is the only release pointer. Repository checks validate the complete
 tree and reject mixed release/tooling changes. This repository does not grant
 the Unlock Platform any built-in URL, source identity, or trust root.
+
+The default stable GitHub Raw BaseURL and the equivalent self-hosted HTTPS
+contract are documented in [`../../docs/ORIGINS.md`](../../docs/ORIGINS.md).
