@@ -104,6 +104,9 @@ func buildAll(sourcesRoot, outputRoot string, epoch time.Time, stdout io.Writer)
 		return fmt.Errorf("create candidate staging root: %w", err)
 	}
 	defer os.RemoveAll(staging)
+	if err := os.Chmod(staging, 0o755); err != nil {
+		return fmt.Errorf("set candidate staging root mode: %w", err)
+	}
 	for _, path := range paths {
 		candidate, err := cohort.BuildCandidate(path, staging, epoch)
 		if err != nil {

@@ -2,10 +2,14 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/holandyoung/unlock-catalog/internal/policy"
+	"github.com/holandyoung/unlock-catalog/internal/signing"
 )
 
 func TestSourceDateEpochIsRequiredAndStrict(t *testing.T) {
@@ -29,6 +33,43 @@ func TestSourceDateEpochIsRequiredAndStrict(t *testing.T) {
 	want := time.Unix(1_785_312_000, 0).UTC()
 	if !got.Equal(want) || got.Location() != time.UTC {
 		t.Fatalf("epoch = %s want %s UTC", got, want)
+	}
+}
+
+func TestCandidateCommandProducesSignerCompatibleDirectories(t *testing.T) {
+	output := filepath.Join(t.TempDir(), "candidate")
+	var stdout, stderr bytes.Buffer
+	err := run(
+		[]string{"candidate", "--sources", filepath.Join("..", "..", "catalog", "definitions"), "--output", output},
+		func(name string) string {
+			if name == "SOURCE_DATE_EPOCH" {
+				return "1785312000"
+			}
+			return ""
+		},
+		&stdout,
+		&stderr,
+	)
+	if err != nil {
+		t.Fatalf("build candidate set: %v", err)
+	}
+	assertDirectoryMode(t, output, 0o755)
+	for _, sourceID := range []string{policy.DataSourceID, policy.ExecSourceID} {
+		candidate := filepath.Join(output, sourceID)
+		if _, err := signing.Inspect(candidate); err != nil {
+			t.Fatalf("inspect published candidate %q: %v", sourceID, err)
+		}
+	}
+}
+
+func assertDirectoryMode(t *testing.T, path string, want os.FileMode) {
+	t.Helper()
+	info, err := os.Lstat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !info.IsDir() || info.Mode().Perm() != want {
+		t.Fatalf("directory %s mode = %04o want %04o", path, info.Mode().Perm(), want)
 	}
 }
 

@@ -131,6 +131,9 @@ func BuildCandidate(sourceFile, outputRoot string, epoch time.Time) (Candidate, 
 		return Candidate{}, fmt.Errorf("create candidate staging directory: %w", err)
 	}
 	defer os.RemoveAll(temporary)
+	if err := os.Chmod(temporary, 0o755); err != nil {
+		return Candidate{}, fmt.Errorf("set candidate staging directory mode: %w", err)
+	}
 	if err := writeCandidate(temporary, payload, requestBytes, objects); err != nil {
 		return Candidate{}, err
 	}
